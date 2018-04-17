@@ -20,6 +20,7 @@ func getHref(t html.Token) (ok bool, href string) {
 	return
 }
 
+// Gets all urls associated with the given url
 func GetUrls(url string, urlCh chan string, doneSignalCh chan bool) {
     resp, err := http.Get(url)
     
@@ -41,6 +42,7 @@ func GetUrls(url string, urlCh chan string, doneSignalCh chan bool) {
             return
         case token == html.StartTagToken:
             tok := tokenizer.Token()
+            //fmt.Println(tok)
 
             if tok.Data == "a" {
                 continue
@@ -54,8 +56,6 @@ func GetUrls(url string, urlCh chan string, doneSignalCh chan bool) {
             if strings.Index(url, "http") == 0 {
                 urlCh <- url
             }
-        default:
-            return
         }
     }
 }
