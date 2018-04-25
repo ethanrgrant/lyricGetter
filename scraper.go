@@ -5,7 +5,16 @@ import (
     "net/http"
     "golang.org/x/net/html"
     "strings"
+
+    // import third party libraries
+    "github.com/PuerkitoBio/goquery"
 )
+
+type AristSongLyrics struct {
+    Artist string
+    Lyrics string
+    Song string
+}
 
 // Helper function to pull the href attribute from a Token
 func getHref(t html.Token) (ok bool, href string) {
@@ -60,3 +69,23 @@ func GetUrls(url string, urlCh chan string, doneSignalCh chan bool) {
     }
 }
 
+
+func GetSongList(artistName string) {
+    finalUrl := "http://www.songfacts.com/artist-" + artistName + ".php"
+
+/*
+    artistSong := Artist{Artist: artistName
+    defer func() {
+       outArtistSongChan <-  artistSong
+    }*/
+    doc, err := goquery.NewDocument(finalUrl)
+    if err != nil {
+        fmt.Println("ERROR: failed to get songs for " + artistName + "!")
+        return
+    }
+    doc.Find(".songullist-orange").Each(func(i int, s *goquery.Selection) {
+    // For each item found, get the band and title
+        band := s.Find("a").Text()
+        fmt.Printf("%s: %s\n", i, band)
+    })
+}
