@@ -13,14 +13,31 @@ type SongLyrics struct {
 	Song   string
 }
 
+func buildLyricUrl(artistName string, songName string) (string) {
+    return "https://genius.com/" + artistName + "-" + songName + "-lyrics"
+}
+
+func buildSongList(artistName string) (string) {
+	return "http://www.songfacts.com/artist-" + artistName + ".php"
+}
+
 func getLyrics(artistName string, songName string, songLyricCh chan SongLyrics, finishCh chan bool) {
-	songLyricCh <- SongLyrics{Song: songName, Lyrics: "These are lyrics"}
-	finishCh <- true
+    songLyrics := SongLyrics{Song: songName, Lyrics: "" }
+    defer func() { finishCh <- true; songLyricCh <- songLyrics }()
+    doc, err := goquery.NewDocument(buildLyricUrl(artistName, songName))
+    if err != nil {
+        songLyrics.Lyrics = "Failed to get lyrics for this song"
+        return
+    }
+    lyrics := ""
+    doc.Find(".lyrics").Find("a").Each(func(i int, s *goquery.Selection) {
+       lyrics += s.Text()
+    })
+    songLyrics.Lyrics = lyrics
 }
 
 func GetSongList(artistName string, songNum * int, songLyricCh chan SongLyrics, finishCh chan bool) {
-	finalUrl := "http://www.songfacts.com/artist-" + artistName + ".php"
-	doc, err := goquery.NewDocument(finalUrl)
+	doc, err := goquery.NewDocument(buildSongList(artistName))
 	if err != nil {
 		fmt.Println("ERROR: failed to get songs for " + artistName + "!")
 		return
